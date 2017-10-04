@@ -60,11 +60,286 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 271);
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */
+/******/ ({
+
+/***/ 12:
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
+
+/***/ 271:
+/***/ (function(module, exports, __webpack_require__) {
+
+const hotel = __webpack_require__(272);
+const restaurant = __webpack_require__(273);
+const activity = __webpack_require__(274);
+// const pg = require('pg');
+// const fs = require('fs');
+const mapboxgl = __webpack_require__(88);
+const { Map } = mapboxgl;
+const buildMarker = __webpack_require__(275);
+
+mapboxgl.accessToken = 'pk.eyJ1IjoiY2Fzc2lvemVuIiwiYSI6ImNqNjZydGl5dDJmOWUzM3A4dGQyNnN1ZnAifQ.0ZIRDup0jnyUFVzUa_5d1g';
+
+const map = new Map({
+	container: 'map',
+	center : [-74.009, 40.705], // FullStack coordinates
+	zoom: 15,
+	style: "mapbox://styles/mapbox/streets-v10"
+})
+
+const marker = buildMarker('hotels', [-74.009, 40.705])
+marker.addTo(map)
+
+//Itinerary Object
+const itinerary = {hotel: [], restaurant: [], activity: []};
+
+
+///LISTENING
+const button = document.getElementsByClassName('options-btn');
+const selectedHotelName = button[0];
+const selectedRestaurantName = button[1];
+const selectedActivity = button[2];
+
+selectedHotelName.addEventListener('click', function (){
+	//getting our selected option
+	let select = document.getElementById(`hotels-choices`);
+	//getting option's value
+	let selectedId = select.value;
+	//create new list item
+	let selectionUL = document.createElement('li');
+	//apply our selection's text to the list item
+	selectionUL.innerHTML = selectedId;
+	//getting our parent list
+	let hotelItineraryList = document.getElementById('hotels-list')
+	//appending our parent list
+	hotelItineraryList.appendChild(selectionUL);
+	//just in case
+	itinerary.hotel.push(selectedId);
+
+	addMarkerToMap(selectedId, 'hotels')
+
+	addDeleteButton(selectionUL);
+})
+
+selectedRestaurantName.addEventListener('click', function (){
+	let select = document.getElementById(`restaurants-choices`);
+	let selectedId = select.value;
+	let selectionUL = document.createElement('li');
+	//apply our selection's text to the list item
+	selectionUL.innerHTML = selectedId;
+	//getting our parent list
+	let hotelItineraryList = document.getElementById('restaurants-list')
+	//appending our parent list
+	hotelItineraryList.appendChild(selectionUL);
+
+	itinerary.restaurant.push(selectedId)
+
+
+	addMarkerToMap(selectedId, 'restaurants')
+
+	addDeleteButton(selectionUL);
+})
+
+selectedActivity.addEventListener('click', function (){
+	let select = document.getElementById(`activities-choices`);
+	let selectedId = select.value;
+	let selectionUL = document.createElement('li');
+	//apply our selection's text to the list item
+	selectionUL.innerHTML = selectedId;
+	//getting our parent list
+	let hotelItineraryList = document.getElementById('activities-list')
+	//appending our parent list
+	hotelItineraryList.appendChild(selectionUL);
+
+	itinerary.activity.push(selectedId)
+
+	let marker = addMarkerToMap(selectedId, 'activities')
+	console.log(marker);
+	addDeleteButton(selectionUL);
+})
+
+
+function addMarkerToMap(searchName, type) {
+	let coordinates;
+	fetch("http://localhost:3000/api")
+	.then(res => res.json())
+	.then(data => {
+		let filteredData;
+		if (type === 'hotels'){
+			filteredData = data.hotels.filter(hotel => {
+				if (hotel.name === searchName){
+					return true;
+				} else return false
+			})
+		} else if (type === 'restaurants'){
+			filteredData = data.restaurants.filter(restaurant => {
+				if (restaurant.name === searchName){
+					return true;
+				} else return false
+			})
+		} else {
+			filteredData = data.activities.filter(activity => {
+				if (activity.name === searchName){
+					return true;
+				} else return false
+			})
+		}
+		return filteredData[0].place.location
+	})
+	.then(coordinates => {
+		let marker = buildMarker(type, coordinates);
+		marker.addTo(map);
+		return marker
+	})
+}
+
+
+function addDeleteButton(li) {
+	let button = document.createElement('button');
+	button.innerHTML = 'x';
+	li.appendChild(button);
+	button.onclick = function () {
+		li.remove();
+	}
+}
+
+
+
+/***/ }),
+
+/***/ 272:
+/***/ (function(module, exports) {
+
+let hotelList = document.getElementById('hotels-choices')
+
+fetch("http://localhost:3000/api")
+    .then(res => res.json())
+.then(content => {
+    let hotelNames = content.hotels.map(hotel => {
+        return hotel.name;
+    })
+    hotelNames.forEach(hotel => {
+        let hotelOption = document.createElement('option');
+        hotelOption.innerHTML = hotel;
+        hotelList.appendChild(hotelOption);
+    })
+    return content;
+})
+.catch(err => {
+    console.log(`There was an error: ${err.status}`)
+})
+
+/***/ }),
+
+/***/ 273:
+/***/ (function(module, exports) {
+
+let restaurantList = document.getElementById('restaurants-choices')
+
+fetch("http://localhost:3000/api")
+.then(res => res.json())
+.then(content => {
+    let restaurantNames = content.restaurants.map(restaurant => {
+        return restaurant.name;
+    })
+
+    restaurantNames.forEach(restaurant => {
+        let restaurantOption = document.createElement('option');
+        restaurantOption.innerHTML = restaurant;
+        restaurantList.appendChild(restaurantOption);
+    })
+
+    return content;
+})
+.catch(err => {
+    console.log(`There was an error: ${err.status}`)
+})
+
+/***/ }),
+
+/***/ 274:
+/***/ (function(module, exports) {
+
+let activityList = document.getElementById('activities-choices')
+
+fetch("http://localhost:3000/api")
+.then(res => res.json())
+.then(content => {
+    let activityNames = content.activities.map(activity => {
+        return activity.name;
+    })
+
+    activityNames.forEach(activity => {
+        let activityOption = document.createElement('option');
+        activityOption.innerHTML = activity;
+        activityList.appendChild(activityOption);
+    })
+
+    return content;
+})
+.catch(err => {
+    console.log(`There was an error: ${err.status}`)
+})
+
+/***/ }),
+
+/***/ 275:
+/***/ (function(module, exports, __webpack_require__) {
+
+const { Marker } = __webpack_require__(88);
+
+const iconURLs = {
+  hotels: "http://i.imgur.com/D9574Cu.png",
+  restaurants: "http://i.imgur.com/cqR6pUI.png",
+  activities: "http://i.imgur.com/WbMOfMl.png"
+};
+
+const buildMarker = (type, coords) => {
+	// If user submits unsupported type
+	if(!iconURLs.hasOwnProperty(type)) {
+		type = 'activities'
+	}
+
+	const markerEl = document.createElement('div');
+	markerEl.style.width = '32px';
+	markerEl.style.height = '37px';
+	markerEl.style.backgroundImage = `url(${iconURLs[type]})`; // Look up icon based on activity
+	return new Marker(markerEl).setLngLat(coords)
+
+}
+
+module.exports = buildMarker
+
+/***/ }),
+
+/***/ 88:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {var require;var require;(function(f){if(true){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.mapboxgl = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return require(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
@@ -528,91 +803,9 @@ module.exports={"$version":8,"$root":{"version":{"required":true,"type":"enum","
 
 
 //# sourceMappingURL=mapbox-gl.js.map
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)))
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const mapboxgl = __webpack_require__(0);
-const buildMarker = __webpack_require__(3).buildMarker;
-
-mapboxgl.accessToken = "pk.eyJ1IjoicmV0cm9mdXR1cmVqb3NoIiwiYSI6ImNqOGJxdHJhdTAwdGoyd3NmdnppZXJrNzMifQ.BXVTS6foXuwigV-zixLkVg";
-const map = new mapboxgl.Map({
-    container: "map",
-    center: [-74.009, 40.705], // FullStack coordinates
-    zoom: 12, // starting zoom
-    style: "mapbox://styles/mapbox/streets-v9" // mapbox has lots of different map styles available
-});
-
-const markerDomEl = document.createElement("div");
-markerDomEl.style.width = "32px";
-markerDomEl.style.height = "39px";
-markerDomEl.style.backgroundImage = "url(http://i.imgur.com/WbMOfMl.png)";
-new mapboxgl.Marker(markerDomEl).setLngLat([-74.009, 40.705]).addTo(map);
-
-let marker = buildMarker("activity", [-74.009151, 40.705086]);
-marker.addTo(map);
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const mapboxgl = __webpack_require__(0);
-const activity = 'http://i.imgur.com/WbMOfMl.png'
-const hotel = 'http://i.imgur.com/D9574Cu.png'
-const restaurant = 'http://i.imgur.com/cqR6pUI.png'
-const  generic = 'http://i.imgur.com/WbMOfMl.png'
-
-function buildMarker(markerType, coordinates) {
-    //create new div element
-     let markerDomEl = document.createElement("div");
-     markerDomEl.style.width = "32px";
-     markerDomEl.style.height = "39px";
-
-     //get correct image tag
-     let newMarkerType;
-     if(markerType === 'activity') newMarkerType = activity;
-     else if(markerType === 'hotel') newMarkerType = hotel;
-     else if(markerType === 'restaurant') newMarkerType = restaurant;
-     else newMarkerType = generic;
-
-     //assign image tag
-     markerDomEl.style.backgroundImage = "url(" + newMarkerType + ")";
-
-     //pass div to mapboxgl.Marker and return element
-     return new mapboxgl.Marker(markerDomEl).setLngLat(coordinates)
- }
-
-module.exports.buildMarker = buildMarker;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(12)))
 
 /***/ })
-/******/ ]);
+
+/******/ });
+//# sourceMappingURL=bundle.js.map
