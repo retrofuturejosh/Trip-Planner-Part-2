@@ -608,6 +608,8 @@ for (let i = 0; i < button.length; i++){
 //store our markers for deletion
 const markerReference = {};
 
+
+//add marker, add marker to maker reference, fly to location of added marker
 function addMarkerToMap(searchName, type) {
 	let coordinates;
 	fetch("http://localhost:3000/api")
@@ -647,6 +649,8 @@ function addMarkerToMap(searchName, type) {
 	})
 }
 
+
+//gets name from element
 function getName (str){
     let returnStr = '';
     for (let i = 0; i < str.length; i++){
@@ -656,6 +660,8 @@ function getName (str){
     return returnStr;
 }
 
+
+//adds a working delete button, moves map to location and pauses before removal, removes marker from marker reference
 function addDeleteButton(li, category) {
 	let button = document.createElement('button');
 	button.innerHTML = 'x';
