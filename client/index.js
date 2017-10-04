@@ -83,7 +83,6 @@ selectedActivity.addEventListener('click', function (){
 	itinerary.activity.push(selectedId)
 
 	let marker = addMarkerToMap(selectedId, 'activities')
-	console.log(marker);
 	addDeleteButton(selectionUL);
 })
 
@@ -119,10 +118,10 @@ function addMarkerToMap(searchName, type) {
 	})
 	.then(coordinates => {
 		let marker = buildMarker(type, coordinates);
-		markerReference[searchName] = marker;
+		markerReference[searchName] = [marker, coordinates];
 		marker.addTo(map);
 
-		map.flyTo({ center: coordinates})
+		map.flyTo({ center: coordinates, zoom: 15})
 
 		return marker
 	})
@@ -142,9 +141,10 @@ function addDeleteButton(li) {
 	button.innerHTML = 'x';
 	li.appendChild(button);
 	button.onclick = function () {
-       let toRemove = getName(li.innerHTML);
-		markerReference[toRemove].remove();
-        li.remove();
+	   let toRemove = getName(li.innerHTML);
+		markerReference[toRemove][0].remove();
+		li.remove();
+		map.flyTo({ center: markerReference[toRemove][1], zoom: 13})
 	}
 }
 
