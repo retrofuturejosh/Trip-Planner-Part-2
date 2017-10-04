@@ -155,7 +155,7 @@ function addDeleteButton(li) {
 		li.remove();
 		window.setTimeout(function () {
 			markerReference[toRemove][0].remove();
-		}, 1000)
+		}, 1500)
 	}
 }
 
