@@ -87,6 +87,8 @@ selectedActivity.addEventListener('click', function (){
 	addDeleteButton(selectionUL);
 })
 
+const markerReference = {};
+
 
 function addMarkerToMap(searchName, type) {
 	let coordinates;
@@ -117,18 +119,33 @@ function addMarkerToMap(searchName, type) {
 	})
 	.then(coordinates => {
 		let marker = buildMarker(type, coordinates);
+		markerReference[searchName] = marker;
 		marker.addTo(map);
+
+		map.flyTo({ center: coordinates})
+
 		return marker
 	})
 }
 
+function getName (str){
+    let returnStr = '';
+    for (let i = 0; i < str.length; i++){
+        if (str[i] === '<') break;
+        returnStr += str[i]
+    }
+    return returnStr;
+}
 
 function addDeleteButton(li) {
 	let button = document.createElement('button');
 	button.innerHTML = 'x';
 	li.appendChild(button);
 	button.onclick = function () {
-		li.remove();
+       let toRemove = getName(li.innerHTML);
+		markerReference[toRemove].remove();
+        li.remove();
 	}
 }
+
 
