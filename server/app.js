@@ -5,20 +5,21 @@ const bodyParser = require('body-parser');
 const http = require('http');
 const server = http.createServer();
 const path = require('path');
+// const routes = require('../routes')
 
 const db = require("../models").db;
 
-// you'll of course want static middleware so your browser can request things like your 'index.html' and 'bundle.js'.
-app.use(express.static(path.join(__dirname, '..', 'public')))
-
-// Any routes or other various middlewares should go here!
-
-
+// Any routes or other various middlewares should go here
 // logging and body-parsing
+
 app.use(morgan);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
+app.get('/', (req, res, next) => {
+    res.send('whats up')
+})
+// app.use('/', routes)
 
 // static file-serving middleware
 app.use(express.static(path.join(__dirname, "..", "public")));
