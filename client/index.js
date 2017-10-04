@@ -34,6 +34,8 @@ selectedHotelName.addEventListener('click', function (){
 	let select = document.getElementById(`hotels-choices`);
 	//getting option's value
 	let selectedId = select.value;
+
+	if (itinerary.hotel.includes(selectedId)) return;
 	//create new list item
 	let selectionUL = document.createElement('li');
 	//apply our selection's text to the list item
@@ -53,6 +55,10 @@ selectedHotelName.addEventListener('click', function (){
 selectedRestaurantName.addEventListener('click', function (){
 	let select = document.getElementById(`restaurants-choices`);
 	let selectedId = select.value;
+
+	if (itinerary.restaurant.includes(selectedId)) return;
+
+
 	let selectionUL = document.createElement('li');
 	//apply our selection's text to the list item
 	selectionUL.innerHTML = selectedId;
@@ -72,6 +78,9 @@ selectedRestaurantName.addEventListener('click', function (){
 selectedActivity.addEventListener('click', function (){
 	let select = document.getElementById(`activities-choices`);
 	let selectedId = select.value;
+
+	if (itinerary.activity.includes(selectedId)) return;
+
 	let selectionUL = document.createElement('li');
 	//apply our selection's text to the list item
 	selectionUL.innerHTML = selectedId;
@@ -142,9 +151,11 @@ function addDeleteButton(li) {
 	li.appendChild(button);
 	button.onclick = function () {
 	   let toRemove = getName(li.innerHTML);
-		markerReference[toRemove][0].remove();
-		li.remove();
 		map.flyTo({ center: markerReference[toRemove][1], zoom: 13})
+		li.remove();
+		window.setTimeout(function () {
+			markerReference[toRemove][0].remove();
+		}, 1000)
 	}
 }
 
