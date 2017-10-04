@@ -7,17 +7,24 @@ var Hotel = require("../models").Hotel;
 var Restaurant = require("../models").Restaurant;
 var Activity = require("../models").Activity;
 
-route.get('/', (req, res, next) => {
+
+route.get('/', function(req, res, next){
     var allAttractions = {};
-    
-    Hotel.findAll()
+
+    Hotel.findAll({
+         include: [{ all: true }]
+    })
     .then(function(hotels) {
       allAttractions.hotels = hotels;
-      return Restaurant.findAll();
+      return Restaurant.findAll({
+          include: [{ all: true }]
+      });
     })
     .then(function(restaurants) {
       allAttractions.restaurants = restaurants;
-      return Activity.findAll();
+      return Activity.findAll({
+          include: [{ all: true }]
+      });
     })
     .then(function(activities) {
       allAttractions.activities = activities;

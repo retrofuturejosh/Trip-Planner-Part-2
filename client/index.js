@@ -1,4 +1,7 @@
+const hotel = require('./hotel.js');
 
+console.log(hotel.cont);
+console.log('HIIIIIIIII');
 const mapboxgl = require("mapbox-gl");
 const { Map } = mapboxgl;
 const buildMarker = require('./marker.js');
