@@ -1,15 +1,15 @@
 const { Marker } = require('mapbox-gl');
 
 const iconURLs = {
-  hotels: "http://i.imgur.com/D9574Cu.png",
-  restaurants: "http://i.imgur.com/cqR6pUI.png",
-  activities: "http://i.imgur.com/WbMOfMl.png"
+  hotel: "http://i.imgur.com/D9574Cu.png",
+  restaurant: "http://i.imgur.com/cqR6pUI.png",
+  activity: "http://i.imgur.com/WbMOfMl.png"
 };
 
 const buildMarker = (type, coords) => {
 	// If user submits unsupported type
 	if(!iconURLs.hasOwnProperty(type)) {
-		type = 'activities'
+		type = 'activity'
 	}
 
 	const markerEl = document.createElement('div');

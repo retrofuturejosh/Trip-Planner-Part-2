@@ -537,14 +537,14 @@ module.exports={"$version":8,"$root":{"version":{"required":true,"type":"enum","
 const hotel = __webpack_require__(2);
 const restaurant = __webpack_require__(3);
 const activity = __webpack_require__(4);
-// const pg = require('pg');
-// const fs = require('fs');
 const mapboxgl = __webpack_require__(0);
 const { Map } = mapboxgl;
 const buildMarker = __webpack_require__(6);
 
+//map token
 mapboxgl.accessToken = 'pk.eyJ1IjoiY2Fzc2lvemVuIiwiYSI6ImNqNjZydGl5dDJmOWUzM3A4dGQyNnN1ZnAifQ.0ZIRDup0jnyUFVzUa_5d1g';
 
+//create map
 const map = new Map({
 	container: 'map',
 	center : [-74.009, 40.705], // FullStack coordinates
@@ -552,87 +552,61 @@ const map = new Map({
 	style: "mapbox://styles/mapbox/streets-v10"
 })
 
-const marker = buildMarker('hotels', [-74.009, 40.705])
+//starting point
+const marker = buildMarker('hotel', [-74.009, 40.705])
 marker.addTo(map)
 
-//Itinerary Object
+//Itinerary Object (state)
 const itinerary = {hotel: [], restaurant: [], activity: []};
 
-
-///LISTENING
+///LISTENING, add click listener to add button
 const button = document.getElementsByClassName('options-btn');
-const selectedHotelName = button[0];
-const selectedRestaurantName = button[1];
-const selectedActivity = button[2];
 
-selectedHotelName.addEventListener('click', function (){
-	//getting our selected option
-	let select = document.getElementById(`hotels-choices`);
-	//getting option's value
-	let selectedId = select.value;
+for (let i = 0; i < button.length; i++){
+	button[i].addEventListener('click', function (){
+		let currentButton = button[i];
+		let idtype;
+		let category;
+		let listname;
+		//assign specifc buttons
+		if (currentButton.id === 'hotels-add'){
+			idtype = 'hotels-choices';
+			category = 'hotel';
+			listname = 'hotels-list'
+		} else if (currentButton.id === 'restaurants-add'){
+			idtype = 'restaurants-choices';
+			category = 'restaurant';
+			listname = 'restaurants-list'
+		} else {
+			idtype = 'activities-choices';
+			category = 'activity'
+			listname = 'activities-list'
+		}
+		let select = document.getElementById(idtype);
+		let selectedId = select.value;
 
-	if (itinerary.hotel.includes(selectedId)) return;
-	//create new list item
-	let selectionUL = document.createElement('li');
-	//apply our selection's text to the list item
-	selectionUL.innerHTML = selectedId;
-	//getting our parent list
-	let hotelItineraryList = document.getElementById('hotels-list')
-	//appending our parent list
-	hotelItineraryList.appendChild(selectionUL);
-	//just in case
-	itinerary.hotel.push(selectedId);
+		//check for duplicates
+		if (itinerary[category].includes(selectedId)) return;
 
-	addMarkerToMap(selectedId, 'hotels')
+		//add to itinerary list
+		let selectionUL = document.createElement('li');
+		selectionUL.innerHTML = selectedId;
+		let currentList = document.getElementById(listname);
+		currentList.appendChild(selectionUL);
 
-	addDeleteButton(selectionUL);
-})
+		//add item to itinerary state
+		itinerary[category].push(selectedId);
 
-selectedRestaurantName.addEventListener('click', function (){
-	let select = document.getElementById(`restaurants-choices`);
-	let selectedId = select.value;
+		//add the marker to map
+		addMarkerToMap(selectedId, category);
 
-	if (itinerary.restaurant.includes(selectedId)) return;
+		//give the itinerary list a delete button
+		addDeleteButton(selectionUL, category);
+	})
+}
 
-
-	let selectionUL = document.createElement('li');
-	//apply our selection's text to the list item
-	selectionUL.innerHTML = selectedId;
-	//getting our parent list
-	let hotelItineraryList = document.getElementById('restaurants-list')
-	//appending our parent list
-	hotelItineraryList.appendChild(selectionUL);
-
-	itinerary.restaurant.push(selectedId)
-
-
-	addMarkerToMap(selectedId, 'restaurants')
-
-	addDeleteButton(selectionUL);
-})
-
-selectedActivity.addEventListener('click', function (){
-	let select = document.getElementById(`activities-choices`);
-	let selectedId = select.value;
-
-	if (itinerary.activity.includes(selectedId)) return;
-
-	let selectionUL = document.createElement('li');
-	//apply our selection's text to the list item
-	selectionUL.innerHTML = selectedId;
-	//getting our parent list
-	let hotelItineraryList = document.getElementById('activities-list')
-	//appending our parent list
-	hotelItineraryList.appendChild(selectionUL);
-
-	itinerary.activity.push(selectedId)
-
-	let marker = addMarkerToMap(selectedId, 'activities')
-	addDeleteButton(selectionUL);
-})
-
+//store our markers for deletion
 const markerReference = {};
-
 
 function addMarkerToMap(searchName, type) {
 	let coordinates;
@@ -640,13 +614,13 @@ function addMarkerToMap(searchName, type) {
 	.then(res => res.json())
 	.then(data => {
 		let filteredData;
-		if (type === 'hotels'){
+		if (type === 'hotel'){
 			filteredData = data.hotels.filter(hotel => {
 				if (hotel.name === searchName){
 					return true;
 				} else return false
 			})
-		} else if (type === 'restaurants'){
+		} else if (type === 'restaurant'){
 			filteredData = data.restaurants.filter(restaurant => {
 				if (restaurant.name === searchName){
 					return true;
@@ -663,11 +637,12 @@ function addMarkerToMap(searchName, type) {
 	})
 	.then(coordinates => {
 		let marker = buildMarker(type, coordinates);
+		if (searchName === 'National September 11th Memorial & Museum') {
+			searchName = 'National September 11th Memorial';
+		}
 		markerReference[searchName] = [marker, coordinates];
 		marker.addTo(map);
-
 		map.flyTo({ center: coordinates, zoom: 15})
-
 		return marker
 	})
 }
@@ -681,19 +656,98 @@ function getName (str){
     return returnStr;
 }
 
-function addDeleteButton(li) {
+function addDeleteButton(li, category) {
 	let button = document.createElement('button');
 	button.innerHTML = 'x';
 	li.appendChild(button);
 	button.onclick = function () {
 	   let toRemove = getName(li.innerHTML);
+	   if (toRemove === 'National September 11th Memorial &amp; Museum') {
+		toRemove = 'National September 11th Memorial';
+	}
 		map.flyTo({ center: markerReference[toRemove][1], zoom: 13})
 		li.remove();
 		window.setTimeout(function () {
 			markerReference[toRemove][0].remove();
+			let index = itinerary[category].indexOf(toRemove);
+			itinerary[category].splice(index, 1);
 		}, 1500)
 	}
 }
+
+
+
+
+
+// const selectedHotelName = button[0];
+// const selectedRestaurantName = button[1];
+// const selectedActivity = button[2];
+
+// selectedHotelName.addEventListener('click', function (){
+// 	//getting our selected option
+// 	let select = document.getElementById(`hotels-choices`);
+// 	//getting option's value
+// 	let selectedId = select.value;
+
+// 	if (itinerary.hotel.includes(selectedId)) return;
+// 	//create new list item
+// 	let selectionUL = document.createElement('li');
+// 	//apply our selection's text to the list item
+// 	selectionUL.innerHTML = selectedId;
+// 	//getting our parent list
+// 	let hotelItineraryList = document.getElementById('hotels-list')
+// 	//appending our parent list
+// 	hotelItineraryList.appendChild(selectionUL);
+// 	//just in case
+// 	itinerary.hotel.push(selectedId);
+
+// 	addMarkerToMap(selectedId, 'hotels')
+
+// 	addDeleteButton(selectionUL);
+// })
+
+// selectedRestaurantName.addEventListener('click', function (){
+// 	let select = document.getElementById(`restaurants-choices`);
+// 	let selectedId = select.value;
+
+// 	if (itinerary.restaurant.includes(selectedId)) return;
+
+
+// 	let selectionUL = document.createElement('li');
+// 	//apply our selection's text to the list item
+// 	selectionUL.innerHTML = selectedId;
+// 	//getting our parent list
+// 	let hotelItineraryList = document.getElementById('restaurants-list')
+// 	//appending our parent list
+// 	hotelItineraryList.appendChild(selectionUL);
+
+// 	itinerary.restaurant.push(selectedId)
+
+
+// 	addMarkerToMap(selectedId, 'restaurants')
+
+// 	addDeleteButton(selectionUL);
+// })
+
+// selectedActivity.addEventListener('click', function (){
+// 	let select = document.getElementById(`activities-choices`);
+// 	let selectedId = select.value;
+
+// 	if (itinerary.activity.includes(selectedId)) return;
+
+// 	let selectionUL = document.createElement('li');
+// 	//apply our selection's text to the list item
+// 	selectionUL.innerHTML = selectedId;
+// 	//getting our parent list
+// 	let hotelItineraryList = document.getElementById('activities-list')
+// 	//appending our parent list
+// 	hotelItineraryList.appendChild(selectionUL);
+
+// 	itinerary.activity.push(selectedId)
+
+// 	let marker = addMarkerToMap(selectedId, 'activities')
+// 	addDeleteButton(selectionUL);
+// })
 
 
 
@@ -805,15 +859,15 @@ module.exports = g;
 const { Marker } = __webpack_require__(0);
 
 const iconURLs = {
-  hotels: "http://i.imgur.com/D9574Cu.png",
-  restaurants: "http://i.imgur.com/cqR6pUI.png",
-  activities: "http://i.imgur.com/WbMOfMl.png"
+  hotel: "http://i.imgur.com/D9574Cu.png",
+  restaurant: "http://i.imgur.com/cqR6pUI.png",
+  activity: "http://i.imgur.com/WbMOfMl.png"
 };
 
 const buildMarker = (type, coords) => {
 	// If user submits unsupported type
 	if(!iconURLs.hasOwnProperty(type)) {
-		type = 'activities'
+		type = 'activity'
 	}
 
 	const markerEl = document.createElement('div');
